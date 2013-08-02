@@ -1,0 +1,213 @@
+GIT
+  remote: git@github.com:wongatech/pantry_daemon_common.git
+  revision: 05afbc7c00878ef93324ff598a3334ee1645e716
+  specs:
+    pantry_daemon_common (0.0.2)
+      aws-sdk
+      em-winrm
+      net-ssh
+      net-ssh-multi
+
+GIT
+  remote: https://github.com/pmorton/em-winrm.git
+  revision: ab9c0a19fcf64c0de2720ac81fc03d27f381de47
+  branch: new-eventmachine
+  specs:
+    em-winrm (0.5.4)
+      eventmachine (~> 1.0.0)
+      mixlib-log (>= 1.3.0)
+      uuidtools (~> 2.1.1)
+      winrm (~> 1.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    akami (1.2.0)
+      gyoku (>= 0.4.0)
+      nokogiri (>= 1.4.0)
+    aws-sdk (1.14.1)
+      json (~> 1.4)
+      nokogiri (< 1.6.0)
+      uuidtools (~> 2.1)
+    builder (3.2.2)
+    chef (11.6.0)
+      erubis
+      highline (>= 1.6.9)
+      json (>= 1.4.4, <= 1.7.7)
+      mixlib-authentication (>= 1.3.0)
+      mixlib-cli (~> 1.3.0)
+      mixlib-config (>= 1.1.2)
+      mixlib-log (>= 1.3.0)
+      mixlib-shellout
+      net-ssh (~> 2.6)
+      net-ssh-multi (~> 1.1.0)
+      ohai (>= 0.6.0)
+      rest-client (>= 1.0.4, < 1.7.0)
+      yajl-ruby (~> 1.1)
+    coderay (1.0.9)
+    columnize (0.3.6)
+    daemons (1.1.9)
+    debugger (1.6.1)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.2.3)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.2.3)
+    diff-lcs (1.2.4)
+    erubis (2.7.0)
+    eventmachine (1.0.3)
+    eventmachine (1.0.3-x86-mingw32)
+    ffi (1.9.0)
+    ffi (1.9.0-x86-mingw32)
+    formatador (0.2.4)
+    gssapi (1.0.3)
+      ffi (>= 1.0.1)
+    guard (1.8.2)
+      formatador (>= 0.2.4)
+      listen (>= 1.0.0)
+      lumberjack (>= 1.0.2)
+      pry (>= 0.9.10)
+      thor (>= 0.14.6)
+    guard-bundler (1.0.0)
+      bundler (~> 1.0)
+      guard (~> 1.1)
+    guard-rspec (3.0.2)
+      guard (>= 1.8)
+      rspec (~> 2.13)
+    gyoku (1.1.0)
+      builder (>= 2.1.2)
+    highline (1.6.19)
+    httpclient (2.2.0.2)
+    httpi (0.9.7)
+      rack
+    ipaddress (0.8.0)
+    json (1.7.7)
+    knife-windows (0.5.12)
+      em-winrm (= 0.5.4)
+    listen (1.2.2)
+      rb-fsevent (>= 0.9.3)
+      rb-inotify (>= 0.9)
+      rb-kqueue (>= 0.2)
+    little-plugger (1.1.3)
+    logging (1.6.2)
+      little-plugger (>= 1.1.3)
+    lumberjack (1.0.4)
+    method_source (0.8.2)
+    mime-types (1.23)
+    mixlib-authentication (1.3.0)
+      mixlib-log
+    mixlib-cli (1.3.0)
+    mixlib-config (1.1.2)
+    mixlib-log (1.6.0)
+    mixlib-shellout (1.2.0)
+    mixlib-shellout (1.2.0-x86-mingw32)
+      win32-process (~> 0.7.0)
+      windows-pr (~> 1.2.2)
+    multi_json (1.7.7)
+    net-ssh (2.6.8)
+    net-ssh-gateway (1.2.0)
+      net-ssh (>= 2.6.5)
+    net-ssh-multi (1.1)
+      net-ssh (>= 2.1.4)
+      net-ssh-gateway (>= 0.99.0)
+    nokogiri (1.5.10)
+    nokogiri (1.5.10-x86-mingw32)
+    nori (1.1.5)
+    ohai (6.18.0)
+      ipaddress
+      mixlib-cli
+      mixlib-config
+      mixlib-log
+      mixlib-shellout
+      systemu
+      yajl-ruby
+    pry (0.9.12.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    pry (0.9.12.2-x86-mingw32)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+      win32console (~> 1.3)
+    pry-debugger (0.2.2)
+      debugger (~> 1.3)
+      pry (~> 0.9.10)
+    rack (1.5.2)
+    rake (10.1.0)
+    rb-fsevent (0.9.3)
+    rb-inotify (0.9.0)
+      ffi (>= 0.5.0)
+    rb-kqueue (0.2.0)
+      ffi (>= 0.5.0)
+    rest-client (1.6.7)
+      mime-types (>= 1.16)
+    rspec (2.14.1)
+      rspec-core (~> 2.14.0)
+      rspec-expectations (~> 2.14.0)
+      rspec-mocks (~> 2.14.0)
+    rspec-core (2.14.4)
+    rspec-expectations (2.14.0)
+      diff-lcs (>= 1.1.3, < 2.0)
+    rspec-fire (1.2.0)
+      rspec (~> 2.11)
+    rspec-mocks (2.14.2)
+    rubyntlm (0.1.1)
+    savon (0.9.5)
+      akami (~> 1.0)
+      builder (>= 2.1.2)
+      gyoku (>= 0.4.0)
+      httpi (~> 0.9)
+      nokogiri (>= 1.4.0)
+      nori (~> 1.0)
+      wasabi (~> 1.0)
+    simplecov (0.7.1)
+      multi_json (~> 1.0)
+      simplecov-html (~> 0.7.1)
+    simplecov-html (0.7.1)
+    simplecov-rcov (0.2.3)
+      simplecov (>= 0.4.1)
+    slop (3.4.6)
+    systemu (2.5.2)
+    thor (0.18.1)
+    uuidtools (2.1.4)
+    wasabi (1.0.0)
+      nokogiri (>= 1.4.0)
+    win32-api (1.4.9-x86-mingw32)
+    win32-process (0.7.2)
+      ffi (>= 1.0.0)
+    win32console (1.3.2-x86-mingw32)
+    windows-api (0.4.2)
+      win32-api (>= 1.4.5)
+    windows-pr (1.2.2)
+      win32-api (>= 1.4.5)
+      windows-api (>= 0.3.0)
+    winrm (1.1.2)
+      gssapi (~> 1.0.0)
+      httpclient (~> 2.2.0.2)
+      logging (~> 1.6.1)
+      nokogiri (~> 1.5.0)
+      rubyntlm (~> 0.1.1)
+      savon (= 0.9.5)
+      uuidtools (~> 2.1.2)
+    yajl-ruby (1.1.0)
+    yajl-ruby (1.1.0-x86-mingw32)
+
+PLATFORMS
+  ruby
+  x86-mingw32
+
+DEPENDENCIES
+  chef (~> 11.6.0)
+  daemons
+  em-winrm!
+  guard-bundler
+  guard-rspec
+  knife-windows (~> 0.5.12)
+  pantry_daemon_common!
+  pry-debugger
+  rake
+  rspec
+  rspec-fire
+  simplecov
+  simplecov-rcov
