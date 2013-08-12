@@ -3,6 +3,7 @@ require 'chef/knife'
 require 'chef/knife/bootstrap'
 require 'chef/knife/bootstrap_windows_winrm'
 
+Chef::Knife.new.configure_chef
 Chef::Knife::Bootstrap.load_deps
 Chef::Knife::BootstrapWindowsWinrm.load_deps
 
@@ -15,7 +16,7 @@ module Wonga
     class EC2BootstrapCommandHandler
       def initialize(publisher, logger)
         @publisher = publisher
-        @logger = logger
+        Chef::Log.logger = @logger = logger
       end
 
       def handle_message(message)
@@ -24,12 +25,13 @@ module Wonga
 
         bootstrap = if windows
                       @logger.info "Bootstrap using WinRM"
-                      Chef::Knife::BootstrapWindowsWinrm.new(message_to_windows_args(message))
+                      Chef::Knife::BootstrapWindowsWinrm.new(message_to_windows_args(message, ec2_instance))
                     else
                       @logger.info "Bootstrap using SSH"
-                      Chef::Knife::Bootstrap.new(message_to_linux_args(message))
+                      Chef::Knife::Bootstrap.new(message_to_linux_args(message, ec2_instance))
                     end
 
+        bootstrap.config = bootstrap.default_config.merge(bootstrap.config)
         bootstrap.run
 
         @publisher.publish(message)
@@ -37,12 +39,12 @@ module Wonga
       end
 
       private
-      def message_to_linux_args(message)
-        ["bootstrap",
-         message["private_ip"],
-         "--node-name",
-         "#{message["name"]}.#{message["domain"]}",
-        "--ssh-user",
+      def message_to_linux_args(message, ec2_instance)
+        [ "bootstrap",
+          message["private_ip"] || ec2_instance.private_ip_address,
+          "--node-name",
+          "#{message["instance_name"]}.#{message["domain"]}",
+          "--ssh-user",
           "ubuntu",
           "--sudo",
           "--environment",
@@ -52,17 +54,19 @@ module Wonga
           "--bootstrap-proxy",
           "http://proxy.example.com:8080",
           "--run-list",
-          message["run_list"].join("'")]
+          message["run_list"].join("'"),
+          "--verbose"
+        ]
       end
 
-      def message_to_windows_args(message)
-        ["bootstrap",
-         "windows",
-         "winrm",
-         message["private_ip"],
-         "--node-name",
-         "#{message["name"]}.#{message["domain"]}",
-        "--environment",
+      def message_to_windows_args(message, ec2_instance)
+        [ "bootstrap",
+          "windows",
+          "winrm",
+          message["private_ip"] || ec2_instance.private_ip_address,
+          "--node-name",
+          "#{message["instance_name"]}.#{message["domain"]}",
+          "--environment",
           message["chef_environment"],
           "--bootstrap-proxy",
           "http://proxy.example.com:8080",
@@ -73,7 +77,9 @@ module Wonga
           "--winrm-user",
           "Administrator",
           "--winrm-transport",
-          "plaintext"]
+          "plaintext",
+          "--verbose"
+        ]
       end
     end
   end
