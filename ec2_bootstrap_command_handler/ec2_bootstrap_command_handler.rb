@@ -31,6 +31,7 @@ module Wonga
                       Chef::Knife::Bootstrap.new(message_to_linux_args(message, ec2_instance))
                     end
 
+        Chef::Config[:environment] = message["chef_environment"]
         bootstrap.config = bootstrap.default_config.merge(bootstrap.config)
         bootstrap.run
 
@@ -47,8 +48,6 @@ module Wonga
           "--ssh-user",
           "ubuntu",
           "--sudo",
-          "--environment",
-          message["chef_environment"],
           "--identity-file",
           <%= @config['ssh_key_file'] %>,
           "--bootstrap-proxy",
@@ -66,8 +65,6 @@ module Wonga
           message["private_ip"] || ec2_instance.private_ip_address,
           "--node-name",
           "#{message["instance_name"]}.#{message["domain"]}",
-          "--environment",
-          message["chef_environment"],
           "--bootstrap-proxy",
           "http://proxy.example.com:8080",
           "--run-list",
