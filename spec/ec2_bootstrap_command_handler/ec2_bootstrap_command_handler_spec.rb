@@ -45,7 +45,7 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
     context "for linux machine" do
       before(:each) do
         instance.stub(:platform)
-        Chef::Knife::Bootstrap.any_instance.stub(:run)
+        Chef::Knife::Bootstrap.any_instance.stub(:run) { 0 }
       end
 
       include_examples "send message"
@@ -59,7 +59,7 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
     context "for windows machine" do
       before(:each) do
         instance.stub(:platform).and_return('windows')
-        Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run)
+        Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run) { 0 }
       end
 
       include_examples "send message"
