@@ -33,10 +33,15 @@ module Wonga
 
         Chef::Config[:environment] = message["chef_environment"]
         bootstrap.config = bootstrap.default_config.merge(bootstrap.config)
-        bootstrap.run
-
-        @publisher.publish(message)
-        @logger.info "Message for instance #{message["instance_id"]} processed"
+        output = bootstrap.run
+        if output == 0
+          @logger.info "Chef Bootstrap for instance #{message["instance_id"]} completed successfully"
+          @publisher.publish(message)
+          @logger.info "Message for instance #{message["instance_id"]} processed"
+        else
+          @logger.error "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
+          raise "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
+        end
       end
 
       private
