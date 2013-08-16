@@ -35,6 +35,7 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
   context "#handle_message" do
     let(:instance) { double }
     let(:address) { 'some.address' }
+    let(:captured_stdout) { "Chef Run complete" }
 
     before(:each) do
       Wonga::Daemon::AWSResource.stub_chain(:new, :find_server_by_id).and_return(instance)
@@ -45,7 +46,8 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
     context "for linux machine" do
       before(:each) do
         instance.stub(:platform)
-        Chef::Knife::Bootstrap.any_instance.stub(:run) { 0 }
+        Chef::Knife::Bootstrap.any_instance.stub(:run).and_return(0)
+        StringIO.any_instance.stub(:string).and_return(captured_stdout)
       end
 
       include_examples "send message"
@@ -59,7 +61,8 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
     context "for windows machine" do
       before(:each) do
         instance.stub(:platform).and_return('windows')
-        Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run) { 0 }
+        Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run).and_return(0)
+        StringIO.any_instance.stub(:string).and_return(captured_stdout)
       end
 
       include_examples "send message"
