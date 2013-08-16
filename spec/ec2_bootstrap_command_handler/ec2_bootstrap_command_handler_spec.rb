@@ -35,26 +35,41 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
   context "#handle_message" do
     let(:instance) { double }
     let(:address) { 'some.address' }
-    let(:captured_stdout) { "Chef Run complete" }
+    let(:chef_run_completed) { "Chef Run complete" }
+    let(:chef_run_failed) { "Chef Run failed!" }
 
     before(:each) do
       Wonga::Daemon::AWSResource.stub_chain(:new, :find_server_by_id).and_return(instance)
       instance.stub(:private_dns_name).and_return(address)
     end
 
-
     context "for linux machine" do
       before(:each) do
         instance.stub(:platform)
         Chef::Knife::Bootstrap.any_instance.stub(:run).and_return(0)
-        StringIO.any_instance.stub(:string).and_return(captured_stdout)
       end
 
-      include_examples "send message"
+      context "completes" do
+        before(:each) do
+          StringIO.any_instance.stub(:string).and_return(chef_run_completed)
+        end
 
-      it "runs bootstrap" do
-        expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
-        subject.handle_message message
+        include_examples "send message"
+
+        it "bootstrap" do
+          expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
+          subject.handle_message message
+        end
+      end
+
+      context "fails to" do
+        before(:each) do
+          StringIO.any_instance.stub(:string).and_return(chef_run_failed)
+        end
+        it "bootstrap" do
+          expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
+          expect{subject.handle_message message}.to raise_error(Exception)
+        end
       end
     end
 
@@ -62,14 +77,29 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
       before(:each) do
         instance.stub(:platform).and_return('windows')
         Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run).and_return(0)
-        StringIO.any_instance.stub(:string).and_return(captured_stdout)
       end
 
-      include_examples "send message"
+      context "completes" do
+        before(:each) do
+          StringIO.any_instance.stub(:string).and_return(chef_run_completed)
+        end
 
-      it "runs bootstrap" do
-        expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run)
-        subject.handle_message message
+        include_examples "send message"
+
+        it "bootstrap" do
+          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run)
+          subject.handle_message message
+        end
+      end
+
+      context "fails to" do
+        before(:each) do
+          StringIO.any_instance.stub(:string).and_return(chef_run_failed)
+        end
+        it "bootstrap" do
+          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run)
+          expect{subject.handle_message message}.to raise_error(Exception)
+        end
       end
     end
   end
