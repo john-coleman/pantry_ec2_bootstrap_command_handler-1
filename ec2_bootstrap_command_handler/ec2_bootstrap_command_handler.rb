@@ -41,6 +41,8 @@ module Wonga
 			bootstrap.run
 		  rescue SystemExit => se
 			@logger.error "Chef bootstrap failure caused system error: #{se}"
+			filthy = "FAILURE"
+			bootstrap_exit_code = -1
 		  end
         end
 
