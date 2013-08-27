@@ -1,14 +1,15 @@
 GIT
   remote: git@github.com:wongatech/pantry_daemon_common.git
-  revision: 7cf30fdf30083555fa0b2eb0e0cf5c51dc8da9a2
-  tag: v0.1.1
+  revision: d70ba70283f7f2e6f8681249516c06ba838134bd
+  tag: v0.1.5
   specs:
-    pantry_daemon_common (0.1.1)
+    pantry_daemon_common (0.1.5)
       aws-sdk
       daemons
       em-winrm
       net-ssh
       net-ssh-multi
+      rest-client
       syslogger
 
 GIT
@@ -28,7 +29,7 @@ GEM
     akami (1.2.0)
       gyoku (>= 0.4.0)
       nokogiri (>= 1.4.0)
-    aws-sdk (1.14.1)
+    aws-sdk (1.15.0)
       json (~> 1.4)
       nokogiri (< 1.6.0)
       uuidtools (~> 2.1)
@@ -85,7 +86,7 @@ GEM
     json (1.7.7)
     knife-windows (0.5.12)
       em-winrm (= 0.5.4)
-    listen (1.2.2)
+    listen (1.3.0)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
       rb-kqueue (>= 0.2)
@@ -94,14 +95,14 @@ GEM
       little-plugger (>= 1.1.3)
     lumberjack (1.0.4)
     method_source (0.8.2)
-    mime-types (1.23)
+    mime-types (1.24)
     mixlib-authentication (1.3.0)
       mixlib-log
     mixlib-cli (1.3.0)
     mixlib-config (1.1.2)
     mixlib-log (1.6.0)
     mixlib-shellout (1.2.0)
-    multi_json (1.7.8)
+    multi_json (1.7.9)
     net-ssh (2.6.8)
     net-ssh-gateway (1.2.0)
       net-ssh (>= 2.6.5)
@@ -128,7 +129,7 @@ GEM
     rack (1.5.2)
     rake (10.1.0)
     rb-fsevent (0.9.3)
-    rb-inotify (0.9.0)
+    rb-inotify (0.9.1)
       ffi (>= 0.5.0)
     rb-kqueue (0.2.0)
       ffi (>= 0.5.0)
@@ -138,12 +139,12 @@ GEM
       rspec-core (~> 2.14.0)
       rspec-expectations (~> 2.14.0)
       rspec-mocks (~> 2.14.0)
-    rspec-core (2.14.4)
-    rspec-expectations (2.14.0)
+    rspec-core (2.14.5)
+    rspec-expectations (2.14.2)
       diff-lcs (>= 1.1.3, < 2.0)
     rspec-fire (1.2.0)
       rspec (~> 2.11)
-    rspec-mocks (2.14.2)
+    rspec-mocks (2.14.3)
     rubyntlm (0.1.1)
     savon (0.9.5)
       akami (~> 1.0)
