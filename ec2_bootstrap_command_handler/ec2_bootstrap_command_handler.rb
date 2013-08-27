@@ -83,6 +83,8 @@ module Wonga
           "--sudo",
           "--identity-file",
           <%= @config['ssh_key_file'] %>,
+          "--bootstrap-proxy",
+          message["http_proxy"],
           "--run-list",
           message["run_list"].join("'"),
           "--verbose"
@@ -104,6 +106,8 @@ module Wonga
           "Administrator",
           "--winrm-transport",
           "plaintext",
+          "--bootstrap-proxy",
+          message["http_proxy"],
           "--verbose"
         ]
       end
