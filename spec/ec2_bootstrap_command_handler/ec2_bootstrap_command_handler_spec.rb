@@ -70,6 +70,10 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
           expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
           expect{subject.handle_message message}.to raise_error(Exception)
         end
+		it "bootstrap due to System exit but process does not exit" do
+			Chef::Knife::Bootstrap.any_instance.stub(:run).and_raise(SystemExit)
+			expect{subject.handle_message message}.to raise_error(Exception)
+		end
       end
     end
 
