@@ -37,7 +37,11 @@ module Wonga
         bootstrap.config = bootstrap.default_config.merge(bootstrap.config)
 
         filthy, bootstrap_exit_code = capture_bootstrap_stdout do
-          bootstrap.run
+		  begin
+			bootstrap.run
+		  rescue SystemExit => se
+			@logger.error "Chef bootstrap failure caused system error: #{se}"
+		  end
         end
 
         if bootstrap_exit_code == 0 && /Chef Run complete/.match(filthy.string)
