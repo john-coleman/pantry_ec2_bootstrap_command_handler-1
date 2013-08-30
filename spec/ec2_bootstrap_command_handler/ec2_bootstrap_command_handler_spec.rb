@@ -22,7 +22,8 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
       ],
       "instance_id" => "i-0123abcd",
       "private_ip" => "10.1.1.100",
-      "windows_admin_password" => 'Strong Password'
+      "windows_admin_password" => 'Strong Password',
+      "http_proxy" => 'http://proxy.example.com'
     }
   }
 
