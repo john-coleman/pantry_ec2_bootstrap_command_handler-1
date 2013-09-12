@@ -74,8 +74,7 @@ module Wonga
 
       private
       def message_to_linux_args(message, ec2_instance)
-        if message["http_proxy"].nil?
-          [ "bootstrap",
+        array = [ "bootstrap",
             message["private_ip"] || ec2_instance.private_ip_address,
             "--node-name",
             "#{message["instance_name"]}.#{message["domain"]}",
@@ -88,28 +87,12 @@ module Wonga
             message["run_list"].join("'"),
             "--verbose"
           ]
-        else
-          [ "bootstrap",
-            message["private_ip"] || ec2_instance.private_ip_address,
-            "--node-name",
-            "#{message["instance_name"]}.#{message["domain"]}",
-            "--ssh-user",
-            "ubuntu",
-            "--sudo",
-            "--identity-file",
-            <%= @config['ssh_key_file'] %>,
-            "--bootstrap-proxy",
-            message["http_proxy"],
-            "--run-list",
-            message["run_list"].join("'"),
-            "--verbose"
-          ]
-        end
+        array += ["--bootstrap-proxy", message["http_proxy"]] if message["http_proxy"]
+        array << ["--verbose"]
       end
 
       def message_to_windows_args(message, ec2_instance)
-        if message["http_proxy"].nil?
-          [ "bootstrap",
+          array = [ "bootstrap",
             "windows",
             "winrm",
             message["private_ip"] || ec2_instance.private_ip_address,
@@ -125,26 +108,8 @@ module Wonga
             "plaintext",
             "--verbose"
           ]
-        else
-          [ "bootstrap",
-            "windows",
-            "winrm",
-            message["private_ip"] || ec2_instance.private_ip_address,
-            "--node-name",
-            "#{message["instance_name"]}.#{message["domain"]}",
-            "--run-list",
-            message["run_list"].join("'"),
-            "--winrm-password",
-            message["windows_admin_password"],
-            "--winrm-user",
-            "Administrator",
-            "--winrm-transport",
-            "plaintext",
-            "--bootstrap-proxy",
-            message["http_proxy"],
-            "--verbose"
-          ]
-        end
+        array += ["--bootstrap-proxy", message["http_proxy"]] if message["http_proxy"]
+        array << ["--verbose"]
       end
     end
   end
