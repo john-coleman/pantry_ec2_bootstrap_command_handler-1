@@ -48,12 +48,12 @@ module Wonga
         end
 
         if bootstrap_exit_code == 0 && (/Chef Run complete/.match(filthy.string) || /Chef Client finished/.match(filthy.string))
-          @logger.info filthy.string
+          @logger.info filthy.string.split("\n")
           @logger.info "Chef Bootstrap for instance #{message["instance_id"]} completed successfully"
           @publisher.publish(message)
           @logger.info "Message for instance #{message["instance_id"]} processed"
         else
-          @logger.error filthy.string
+          @logger.error filthy.string.split("\n")
           @logger.error "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
           raise "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
         end
