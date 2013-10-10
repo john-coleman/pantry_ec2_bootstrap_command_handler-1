@@ -12,8 +12,6 @@ require 'chef/application/knife'
 Chef::Knife::Bootstrap.options = Chef::Application::Knife.options.merge(Chef::Knife::Bootstrap.options)
 Chef::Knife::BootstrapWindowsWinrm.options = Chef::Application::Knife.options.merge(Chef::Knife::BootstrapWindowsWinrm.options)
 
-require_relative 'multi_logger'
-
 module Wonga
   module Daemon
     class EC2BootstrapCommandHandler
@@ -48,12 +46,10 @@ module Wonga
         end
 
         if bootstrap_exit_code == 0 && (/Chef Run complete/.match(filthy.string) || /Chef Client finished/.match(filthy.string))
-          filthy.string.split("\n").each { |line| @logger.info line }
           @logger.info "Chef Bootstrap for instance #{message["instance_id"]} completed successfully"
           @publisher.publish(message)
           @logger.info "Message for instance #{message["instance_id"]} processed"
         else
-          filthy.string.split("\n").each { |line| @logger.error line }
           @logger.error "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
           raise "Chef Bootstrap for instance #{message["instance_id"]} did not complete successfully"
         end
@@ -61,9 +57,11 @@ module Wonga
 
       def capture_bootstrap_stdout(bootstrap)
         out = StringIO.new
-        bootstrap.ui = Chef::Knife::UI.new(out, out, STDIN, {})
-        Chef::Log.logger = MultiLogger.new(@logger, Logger.new(out))
-        $stdout = out
+        logger = IOWithLogger.new(out, @logger, :info)
+        logger_error = IOWithLogger.new(out, @logger, :error)
+        bootstrap.ui = Chef::Knife::UI.new(logger, logger_error, STDIN, {})
+        Chef::Log.logger = logger
+        $stdout = logger
         exit_code = yield
         return out, exit_code
       ensure
