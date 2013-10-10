@@ -9,6 +9,18 @@ describe IOWithLogger do
 
   subject { described_class.new(string_io, logger, message_type) }
 
+  describe "#puts" do
+    it "writes to string io" do
+      subject.puts('text')
+      expect(string_io).to have_received(:write).with('text')
+    end
+
+    it "logs to logger" do
+      subject.puts('text')
+      expect(logger).to have_received(:add).with(message_type, nil, 'text')
+    end
+  end
+
   describe "#write" do
     it "writes to string io" do
       subject.write('text')

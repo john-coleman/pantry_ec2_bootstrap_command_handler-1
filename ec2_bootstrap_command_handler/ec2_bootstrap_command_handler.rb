@@ -11,6 +11,7 @@ Chef::Knife::BootstrapWindowsWinrm.load_deps
 require 'chef/application/knife'
 Chef::Knife::Bootstrap.options = Chef::Application::Knife.options.merge(Chef::Knife::Bootstrap.options)
 Chef::Knife::BootstrapWindowsWinrm.options = Chef::Application::Knife.options.merge(Chef::Knife::BootstrapWindowsWinrm.options)
+require_relative 'io_with_logger'
 
 module Wonga
   module Daemon

@@ -7,6 +7,11 @@ class IOWithLogger < Logger
     @log_severity = log_severity
   end
 
+  def puts(text)
+    @io.write(text)
+    @logger.add(@log_severity, nil, text)
+  end
+
   def write(text)
     @io.write(text)
     @logger.add(@log_severity, nil, text)
