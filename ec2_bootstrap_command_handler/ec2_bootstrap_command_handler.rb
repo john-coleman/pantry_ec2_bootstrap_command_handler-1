@@ -58,8 +58,8 @@ module Wonga
 
       def capture_bootstrap_stdout(bootstrap)
         out = StringIO.new
-        logger = IOWithLogger.new(out, @logger, :info)
-        logger_error = IOWithLogger.new(out, @logger, :error)
+        logger = IOWithLogger.new(out, @logger, Logger::INFO)
+        logger_error = IOWithLogger.new(out, @logger, Logger::ERROR)
         bootstrap.ui = Chef::Knife::UI.new(logger, logger_error, STDIN, {})
         Chef::Log.logger = logger
         $stdout = logger
