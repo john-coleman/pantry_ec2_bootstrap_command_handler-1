@@ -21,5 +21,13 @@ class IOWithLogger < Logger
      @io.write(progname)
      @logger.add(severity, message, progname, &block)
    end
+
+   def sync=(value)
+     true
+   end
+
+   def sync
+     true
+   end
 end
 
