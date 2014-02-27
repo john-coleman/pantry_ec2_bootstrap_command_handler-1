@@ -83,7 +83,7 @@ module Wonga
             "--identity-file",
             <%= @config['ssh_key_file'] %>,
             "--run-list",
-            message["run_list"].join("'"),
+            message["run_list"].join(","),
             "--verbose"
           ]
         array += ["--bootstrap-proxy", message["http_proxy"]] if message["http_proxy"]
@@ -98,7 +98,7 @@ module Wonga
             "--node-name",
             "#{message["instance_name"]}.#{message["domain"]}",
             "--run-list",
-            message["run_list"].join("'"),
+            message["run_list"].join(","),
             "--winrm-password",
             message["windows_admin_password"],
             "--winrm-user",
