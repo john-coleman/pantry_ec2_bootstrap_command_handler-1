@@ -207,7 +207,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  chef (~> 11.10.4)
+  chef (~> 11.10)
   em-winrm!
   guard-bundler
   guard-rspec
