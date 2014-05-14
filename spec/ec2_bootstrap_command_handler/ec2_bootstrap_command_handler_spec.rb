@@ -2,6 +2,34 @@ require 'spec_helper'
 require_relative "../../ec2_bootstrap_command_handler/ec2_bootstrap_command_handler"
 
 describe Wonga::Daemon::EC2BootstrapCommandHandler do
+  shared_examples "skip processing instance in not valid state" do
+    context "when instance is stopped" do
+      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :stopped) }
+
+      it "raises exception without initializing" do
+        expect { subject.handle_message message }.to raise_exception
+      end
+    end
+
+    context "when instance is terminated" do
+      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :terminated) }
+
+      it "returns without send message" do
+        subject.handle_message message
+        expect(publisher).not_to have_received(:send_message)
+      end
+    end
+
+    context "when instance doesn't exist" do
+      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => false) }
+
+      it "returns without send message" do
+        subject.handle_message message
+        expect(publisher).not_to have_received(:send_message)
+      end
+    end
+  end
+
   let(:message) {
     {
       "pantry_request_id" => 45,
@@ -34,14 +62,14 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
   it_behaves_like "handler"
 
   context "#handle_message" do
-    let(:instance) { double }
+    let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :running) }
     let(:address) { 'some.address' }
     let(:chef_run_completed) { "Chef Run complete" }
     let(:chef_run_failed) { "Chef Run failed!" }
 
     before(:each) do
       Wonga::Daemon::AWSResource.stub_chain(:new, :find_server_by_id).and_return(instance)
-      instance.stub(:private_dns_name).and_return(address)
+      allow(instance).to receive(:private_dns_name).and_return(address)
     end
 
     context "for linux machine" do
@@ -50,15 +78,17 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
         Chef::Knife::Bootstrap.any_instance.stub(:run).and_return(0)
       end
 
+      it_behaves_like "skip processing instance in not valid state"
+
       context "completes" do
         before(:each) do
           StringIO.any_instance.stub(:string).and_return(chef_run_completed)
+          expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
         end
 
         include_examples "send message"
 
         it "bootstrap" do
-          expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
           subject.handle_message message
         end
       end
@@ -67,6 +97,7 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
         before(:each) do
           StringIO.any_instance.stub(:string).and_return(chef_run_failed)
         end
+
         it "bootstrap" do
           expect_any_instance_of(Chef::Knife::Bootstrap).to receive(:run)
           expect{subject.handle_message message}.to raise_error(Exception)
@@ -77,23 +108,25 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
           expect{subject.handle_message message}.to raise_error(Exception)
         end
       end
+
     end
 
     context "for windows machine" do
       before(:each) do
         instance.stub(:platform).and_return('windows')
-        Chef::Knife::BootstrapWindowsWinrm.any_instance.stub(:run).and_return(0)
       end
+
+      it_behaves_like "skip processing instance in not valid state"
 
       context "completes" do
         before(:each) do
+          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run).and_return(0)
           StringIO.any_instance.stub(:string).and_return(chef_run_completed)
         end
 
         include_examples "send message"
 
         it "bootstrap" do
-          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run)
           subject.handle_message message
         end
       end
@@ -101,9 +134,10 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
       context "fails to" do
         before(:each) do
           StringIO.any_instance.stub(:string).and_return(chef_run_failed)
+          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run).and_return(0)
         end
+
         it "bootstrap" do
-          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run)
           expect{subject.handle_message message}.to raise_error(Exception)
         end
       end
