@@ -24,6 +24,12 @@ module Wonga
 
       def handle_message(message)
         ec2_instance = Wonga::Daemon::AWSResource.new.find_server_by_id message["instance_id"]
+        if !ec2_instance.exists? || ec2_instance.status == :terminated
+          @logger.error "Instance #{message["instance_id"]} does not exist or was terminated. Pantry Request ID#{message["pantry_request_id"]} #{message["instance_name"]}.#{message["domain"]} "
+          return
+        end
+
+        raise 'Stopped' if ec2_instance.status == :stopped
         windows = ec2_instance.platform == "windows"
 
         bootstrap = if windows
