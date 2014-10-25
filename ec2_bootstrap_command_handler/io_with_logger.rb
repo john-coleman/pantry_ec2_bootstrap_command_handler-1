@@ -17,17 +17,16 @@ class IOWithLogger < Logger
     @logger.add(@log_severity, nil, text)
   end
 
-   def add(severity, message = nil, progname = nil, &block)
-     @io.write(progname)
-     @logger.add(severity, message, progname, &block)
-   end
+  def add(severity, message = nil, progname = nil, &block)
+    @io.write(progname)
+    @logger.add(severity, message, progname, &block)
+  end
 
-   def sync=(value)
-     true
-   end
+  def sync=(_value)
+    true
+  end
 
-   def sync
-     true
-   end
+  def sync
+    true
+  end
 end
-
