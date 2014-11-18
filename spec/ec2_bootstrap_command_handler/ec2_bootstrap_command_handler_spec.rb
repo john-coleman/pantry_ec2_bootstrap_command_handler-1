@@ -30,6 +30,7 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
     end
   end
 
+  let(:bootstrap_username) { 'CentOS' }
   let(:message) {
     {
       "pantry_request_id" => 45,
@@ -88,8 +89,14 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
 
         include_examples "send message"
 
-        it "bootstrap" do
+        it 'bootstrap with default bootstrap_username' do
+          expect(Chef::Knife::Bootstrap).to receive(:new).with(bootstrap_array()).and_return(Chef::Knife::Bootstrap.new)
           subject.handle_message message
+        end
+
+        it 'bootstrap with custom bootstrap_username' do
+          expect(Chef::Knife::Bootstrap).to receive(:new).with(bootstrap_array(bootstrap_username)).and_return(Chef::Knife::Bootstrap.new)
+          subject.handle_message message.merge('bootstrap_username' => bootstrap_username)
         end
       end
 
@@ -142,5 +149,24 @@ describe Wonga::Daemon::EC2BootstrapCommandHandler do
         end
       end
     end
+  end
+
+  def bootstrap_array(bootstrap_username = 'ubuntu')
+    [ "bootstrap",
+      message["private_ip"],
+      "--node-name",
+      "#{message["instance_name"]}.#{message["domain"]}",
+      "--ssh-user",
+      bootstrap_username,
+      "--sudo",
+      "--identity-file",
+      <%= @config['ssh_key_file'] %>,
+      "--run-list",
+      message["run_list"].join(","),
+      "--verbose",
+      "--bootstrap-proxy",
+      message["http_proxy"],
+      ["--verbose"]
+    ]
   end
 end

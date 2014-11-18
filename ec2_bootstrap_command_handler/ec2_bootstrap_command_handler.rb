@@ -84,7 +84,7 @@ module Wonga
             "--node-name",
             "#{message["instance_name"]}.#{message["domain"]}",
             "--ssh-user",
-            "ubuntu",
+            message["bootstrap_username"] || 'ubuntu',
             "--sudo",
             "--identity-file",
             <%= @config['ssh_key_file'] %>,
