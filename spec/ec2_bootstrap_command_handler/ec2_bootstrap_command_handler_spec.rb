@@ -57,8 +57,9 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
   let(:knife_bootstrap) { instance_double(Chef::Knife::Bootstrap, run: 0, default_config: {}, config: {}).as_null_object }
 
   let(:publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
+  let(:error_publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
   let(:logger) { instance_double('Logger').as_null_object }
-  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, logger) }
+  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, error_publisher, logger) }
 
   it_behaves_like 'handler'
 
@@ -140,6 +141,20 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
           expect { subject.handle_message message }.to raise_error(Exception)
         end
       end
+    end
+  end
+
+  context '#handle_message publishes message to error topic for terminated instance' do
+    let(:instance) { instance_double('AWS::EC2::Instance', status: :terminated).as_null_object }
+
+    it 'publishes message to error topic' do
+      subject.handle_message(message)
+      expect(error_publisher).to have_received(:publish).with(message)
+    end
+
+    it 'does not publish message to topic' do
+      subject.handle_message(message)
+      expect(publisher).to_not have_received(:publish)
     end
   end
 end

@@ -16,8 +16,9 @@ require_relative 'io_with_logger'
 module Wonga
   module Daemon
     class EC2BootstrapCommandHandler
-      def initialize(publisher, logger)
+      def initialize(publisher, error_publisher, logger)
         @publisher = publisher
+        @error_publisher = error_publisher
         Chef::Log.logger = @logger = logger
         @logger.level = Logger::DEBUG
       end
@@ -27,6 +28,7 @@ module Wonga
         if !ec2_instance.exists? || ec2_instance.status == :terminated
           @logger.error "Instance #{message['instance_id']} does not exist or was terminated." \
             "Pantry Request ID#{message['pantry_request_id']} #{message['instance_name']}.#{message['domain']} "
+          send_error_message(message)
           return
         end
 
@@ -56,6 +58,11 @@ module Wonga
           @logger.error "Chef Bootstrap for instance #{message['instance_id']} did not complete successfully"
           fail "Chef Bootstrap for instance #{message['instance_id']} did not complete successfully"
         end
+      end
+
+      def send_error_message(message)
+        @logger.info 'Send request to cleanup an instance'
+        @error_publisher.publish(message)
       end
 
       def capture_bootstrap_stdout(bootstrap)
