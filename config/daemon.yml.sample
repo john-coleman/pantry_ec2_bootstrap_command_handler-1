@@ -22,6 +22,9 @@ development:
   sns:
     topic_arn: daemon_specific_topic_arn
     error_arn: daemon_specific_error_arn
+  chef:
+    version_for_windows: '11.6'
+    version_for_linux: '11.6'
 test:
   aws:
     access_key_id: some_aws_iam_access_key_id
@@ -42,6 +45,9 @@ test:
   sns:
     topic_arn: daemon_specific_topic_arn
     error_arn: daemon_specific_error_arn
+  chef:
+    version_for_windows: '11.6'
+    version_for_linux: '11.6'
 production:
   aws:
     access_key_id: some_aws_iam_access_key_id
@@ -62,3 +68,6 @@ production:
   sns:
     topic_arn: daemon_specific_topic_arn
     error_arn: daemon_specific_error_arn
+  chef:
+    version_for_windows: '11.6'
+    version_for_linux: '11.6'

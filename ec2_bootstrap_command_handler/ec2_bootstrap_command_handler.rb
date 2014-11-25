@@ -16,11 +16,12 @@ require_relative 'io_with_logger'
 module Wonga
   module Daemon
     class EC2BootstrapCommandHandler
-      def initialize(publisher, error_publisher, logger)
+      def initialize(publisher, error_publisher, logger, config)
         @publisher = publisher
         @error_publisher = error_publisher
         Chef::Log.logger = @logger = logger
         @logger.level = Logger::DEBUG
+        @config = config
       end
 
       def handle_message(message)
@@ -37,10 +38,12 @@ module Wonga
 
         bootstrap = if windows
                       @logger.info 'Bootstrap using WinRM'
-                      Chef::Knife::BootstrapWindowsWinrm.new(message_to_windows_args(message, ec2_instance))
+                      chef_ver = @config['chef']['version_for_windows'] if @config['chef']
+                      Chef::Knife::BootstrapWindowsWinrm.new(message_to_windows_args(message, ec2_instance, chef_ver))
                     else
                       @logger.info 'Bootstrap using SSH'
-                      Chef::Knife::Bootstrap.new(message_to_linux_args(message, ec2_instance))
+                      chef_ver = @config['chef']['version_for_linux'] if @config['chef']
+                      Chef::Knife::Bootstrap.new(message_to_linux_args(message, ec2_instance, chef_ver))
                     end
 
         Chef::Config[:environment] = message['chef_environment']
@@ -85,7 +88,7 @@ module Wonga
 
       private
 
-      def message_to_linux_args(message, ec2_instance)
+      def message_to_linux_args(message, ec2_instance, chef_ver = nil)
         array = ['bootstrap',
                  message['private_ip'] || ec2_instance.private_ip_address,
                  '--node-name',
@@ -99,11 +102,12 @@ module Wonga
                  message['run_list'].join(','),
                  '--verbose'
                 ]
+        array += ['--bootstrap-version', chef_ver] if chef_ver
         array += ['--bootstrap-proxy', message['http_proxy']] if message['http_proxy']
         array << ['--verbose']
       end
 
-      def message_to_windows_args(message, ec2_instance)
+      def message_to_windows_args(message, ec2_instance, chef_ver = nil)
         array = ['bootstrap',
                  'windows',
                  'winrm',
@@ -120,9 +124,9 @@ module Wonga
                  'plaintext',
                  '--verbose',
                  '-l',
-                 'debug',
-                 '--verbose'
+                 'debug'
                 ]
+        array += ['--bootstrap-version', chef_ver] if chef_ver
         array += ['--bootstrap-proxy', message['http_proxy']] if message['http_proxy']
         array
       end

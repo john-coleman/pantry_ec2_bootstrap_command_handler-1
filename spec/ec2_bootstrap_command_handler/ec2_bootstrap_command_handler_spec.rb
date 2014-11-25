@@ -55,11 +55,13 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
     }
   end
   let(:knife_bootstrap) { instance_double(Chef::Knife::Bootstrap, run: 0, default_config: {}, config: {}).as_null_object }
+  let(:knife_bootstrap_winrm) { instance_double(Chef::Knife::BootstrapWindowsWinrm, run: 0, default_config: {}, config: {}).as_null_object }
 
   let(:publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
   let(:error_publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
   let(:logger) { instance_double('Logger').as_null_object }
-  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, error_publisher, logger) }
+  let(:config) { { 'chef' => { 'version_for_windows' => '11.6-windows', 'version_for_linux' => '11.0-linux' } } }
+  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, error_publisher, logger, config) }
 
   it_behaves_like 'handler'
 
@@ -83,6 +85,24 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
       it_behaves_like 'skip processing instance in not valid state'
 
       include_examples 'send message'
+
+      it 'should use Chef version for linux' do
+        subject.handle_message message
+        expect(Chef::Knife::Bootstrap).to have_received(:new) do |args|
+          expect(args).to be_include('11.0-linux')
+        end
+      end
+
+      context 'chef version is not present in config' do
+        let(:config) { { 'some' => { 'test_var' => 'test_val' } } }
+
+        it 'should not use Chef version for linux' do
+          subject.handle_message message
+          expect(Chef::Knife::Bootstrap).to have_received(:new) do |args|
+            expect(args).to_not be_include('--bootstrap-version')
+          end
+        end
+      end
 
       it 'bootstrap with default bootstrap_username' do
         subject.handle_message message
@@ -120,16 +140,34 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
     context 'for windows machine' do
       before(:each) do
         allow(instance).to receive(:platform).and_return('windows')
-        allow_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run).and_return(0)
+        allow(Chef::Knife::BootstrapWindowsWinrm).to receive(:new).and_return(knife_bootstrap_winrm)
       end
 
       it_behaves_like 'skip processing instance in not valid state'
+
+      it 'should use Chef version for windows' do
+        subject.handle_message message
+        expect(Chef::Knife::BootstrapWindowsWinrm).to have_received(:new) do |args|
+          expect(args).to be_include('11.6-windows')
+        end
+      end
+
+      context 'chef version is not present in config' do
+        let(:config) { { 'some' => { 'test_var' => 'test_val' } } }
+
+        it 'should not use Chef version for linux' do
+          subject.handle_message message
+          expect(Chef::Knife::BootstrapWindowsWinrm).to have_received(:new) do |args|
+            expect(args).to_not be_include('--bootstrap-version')
+          end
+        end
+      end
 
       context 'completes' do
         include_examples 'send message'
 
         it 'bootstrap' do
-          expect_any_instance_of(Chef::Knife::BootstrapWindowsWinrm).to receive(:run).and_return(0)
+          expect(Chef::Knife::BootstrapWindowsWinrm).to receive(:new)
           subject.handle_message message
         end
       end

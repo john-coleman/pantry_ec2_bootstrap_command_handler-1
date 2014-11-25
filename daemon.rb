@@ -7,4 +7,5 @@ config_name = File.join(File.dirname(File.symlink?(__FILE__) ? File.readlink(__F
 Wonga::Daemon.load_config(File.expand_path(config_name))
 Wonga::Daemon.run(Wonga::Daemon::EC2BootstrapCommandHandler.new(Wonga::Daemon.publisher,
                                                                 Wonga::Daemon.error_publisher,
-                                                                Wonga::Daemon.logger))
+                                                                Wonga::Daemon.logger,
+                                                                Wonga::Daemon.config))
