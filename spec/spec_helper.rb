@@ -8,12 +8,10 @@ unless ENV['SKIP_COV']
   ]
 end
 require 'spec_support/shared_daemons'
-require 'aws'
-
-AWS.config access_key_id: 'test', secret_access_key: 'test'
-AWS.stub!
 
 RSpec.configure do |config|
+  config.filter_run focus: true
+  config.run_all_when_everything_filtered = true
   config.order = 'random'
   config.expect_with :rspec do |expectations|
     expectations.syntax = :expect
@@ -24,5 +22,10 @@ RSpec.configure do |config|
   config.mock_with :rspec do |mocks|
     mocks.syntax = :expect
     mocks.verify_partial_doubles = true
+  end
+
+  config.before(:each) do
+    Aws.config[:credentials] = Aws::Credentials.new 'test', 'test'
+    Aws.config[:region] = 'eu-west-1'
   end
 end

@@ -16,33 +16,31 @@ require_relative 'io_with_logger'
 module Wonga
   module Daemon
     class EC2BootstrapCommandHandler
-      def initialize(publisher, error_publisher, logger, config)
+      def initialize(publisher, error_publisher, config, aws_resource, logger)
         @publisher = publisher
         @error_publisher = error_publisher
         Chef::Log.logger = @logger = logger
-        @logger.level = Logger::DEBUG
         @config = config
+        @aws_resource = aws_resource
       end
 
       def handle_message(message)
-        ec2_instance = Wonga::Daemon::AWSResource.new.find_server_by_id message['instance_id']
-        if !ec2_instance.exists? || ec2_instance.status == :terminated
-          @logger.error "Instance #{message['instance_id']} does not exist or was terminated." \
-            "Pantry Request ID#{message['pantry_request_id']} #{message['instance_name']}.#{message['domain']} "
+        ec2_instance = @aws_resource.find_server_by_id message['instance_id']
+        unless ec2_instance && ec2_instance.state.name != 'terminated'
           send_error_message(message)
           return
         end
 
-        fail 'Stopped' if ec2_instance.status == :stopped
+        fail 'Stopped' if ec2_instance.state.name == 'stopped'
         windows = ec2_instance.platform == 'windows'
 
         bootstrap = if windows
                       @logger.info 'Bootstrap using WinRM'
-                      chef_ver = @config['chef']['version_for_windows'] if @config['chef']
+                      chef_ver = @config['version_for_windows']
                       Chef::Knife::BootstrapWindowsWinrm.new(message_to_windows_args(message, ec2_instance, chef_ver))
                     else
                       @logger.info 'Bootstrap using SSH'
-                      chef_ver = @config['chef']['version_for_linux'] if @config['chef']
+                      chef_ver = @config['version_for_linux']
                       Chef::Knife::Bootstrap.new(message_to_linux_args(message, ec2_instance, chef_ver))
                     end
 
@@ -64,6 +62,8 @@ module Wonga
       end
 
       def send_error_message(message)
+        @logger.error "Instance #{message['instance_id']} does not exist or was terminated." \
+          "Pantry Request ID#{message['pantry_request_id']} #{message['instance_name']}.#{message['domain']} "
         @logger.info 'Send request to cleanup an instance'
         @error_publisher.publish(message)
       end
@@ -74,6 +74,7 @@ module Wonga
         logger_error = IOWithLogger.new(out, @logger, Logger::ERROR)
         bootstrap.ui = Chef::Knife::UI.new(logger, logger_error, STDIN, {})
         Chef::Log.logger = logger
+        logger.level = Logger::DEBUG
         $stdout = logger
         exit_code = yield
         return out.string, exit_code

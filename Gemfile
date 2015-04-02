@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'chef', '~> 11.16'
+gem 'chef', '~> 12.2'
 gem 'knife-windows'
 gem 'pantry_daemon_common', git: 'git@github.com:wongatech/pantry_daemon_common.git' # migrate to gems soon
 

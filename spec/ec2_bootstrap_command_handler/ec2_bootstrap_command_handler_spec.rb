@@ -1,9 +1,11 @@
 require_relative '../../ec2_bootstrap_command_handler/ec2_bootstrap_command_handler'
+require 'wonga/daemon/aws_resource'
+require 'wonga/daemon/publisher'
 
 RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
   shared_examples 'skip processing instance in not valid state' do
     context 'when instance is stopped' do
-      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :stopped) }
+      let(:status_name) { 'stopped' }
 
       it 'raises exception without initializing' do
         expect { subject.handle_message message }.to raise_exception
@@ -11,20 +13,20 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
     end
 
     context 'when instance is terminated' do
-      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :terminated) }
+      let(:status_name) { 'terminated'  }
 
       it 'returns without send message' do
         subject.handle_message message
-        expect(publisher).not_to have_received(:send_message)
+        expect(publisher).not_to have_received(:publish)
       end
     end
 
     context "when instance doesn't exist" do
-      let(:instance) { instance_double('AWS::EC2::Instance', :exists? => false) }
+      let(:instance) { nil }
 
       it 'returns without send message' do
         subject.handle_message message
-        expect(publisher).not_to have_received(:send_message)
+        expect(publisher).not_to have_received(:publish)
       end
     end
   end
@@ -49,37 +51,38 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
         'role[dbserver]'
       ],
       'instance_id' => 'i-0123abcd',
-      'private_ip' => '10.1.1.100',
+      'private_ip' => '100.1.1.100',
       'windows_admin_password' => 'Strong Password',
       'http_proxy' => 'http://proxy.example.com'
     }
   end
-  let(:knife_bootstrap) { instance_double(Chef::Knife::Bootstrap, run: 0, default_config: {}, config: {}).as_null_object }
-  let(:knife_bootstrap_winrm) { instance_double(Chef::Knife::BootstrapWindowsWinrm, run: 0, default_config: {}, config: {}).as_null_object }
+  let(:address) { 'some.address' }
+  let(:aws_resource) { instance_double(Wonga::Daemon::AWSResource, find_server_by_id: instance) }
+  let(:config) { {} }
+  let(:error_publisher) { instance_double(Wonga::Daemon::Publisher).as_null_object }
+  let(:instance) { instance_double(Aws::EC2::Instance, exists?: true, state: state, private_dns_name: address, platform: platform) }
+  let(:logger) { instance_double(Logger).as_null_object }
+  let(:publisher) { instance_double(Wonga::Daemon::Publisher).as_null_object }
+  let(:state) { Struct.new(:name).new(status_name) }
+  let(:status_name) { 'running' }
+  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, error_publisher, config, aws_resource, logger) }
 
-  let(:publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
-  let(:error_publisher) { instance_double('Wonga::Daemon::Publisher').as_null_object }
-  let(:logger) { instance_double('Logger').as_null_object }
-  let(:config) { { 'chef' => { 'version_for_windows' => '11.6-windows', 'version_for_linux' => '11.0-linux' } } }
-  subject(:bootstrap) { Wonga::Daemon::EC2BootstrapCommandHandler.new(publisher, error_publisher, logger, config) }
-
-  it_behaves_like 'handler'
-
-  context '#handle_message' do
-    let(:instance) { instance_double('AWS::EC2::Instance', :exists? => true, status: :running) }
-    let(:address) { 'some.address' }
-    let(:chef_run_result) { 'Chef Run complete' }
-
+  context 'for linux machine' do
     before(:each) do
-      allow(Wonga::Daemon::AWSResource).to receive_message_chain(:new, :find_server_by_id).and_return(instance)
-      allow(instance).to receive(:private_dns_name).and_return(address)
-      allow_any_instance_of(StringIO).to receive(:string).and_return(chef_run_result)
+      allow(Chef::Knife::Bootstrap).to receive(:new).and_return(knife_bootstrap)
+      expect(Chef::Knife::BootstrapWindowsWinrm).not_to receive(:new)
     end
+    let(:config) { { 'version_for_linux' => '11.0-linux' } }
+    let(:knife_bootstrap) { instance_double(Chef::Knife::Bootstrap, run: 0, default_config: {}, config: {}).as_null_object }
+    let(:platform) { '' }
 
-    context 'for linux machine' do
+    it_behaves_like 'handler'
+
+    context '#handle_message' do
+      let(:chef_run_result) { 'Chef Run complete' }
+
       before(:each) do
-        allow(instance).to receive(:platform)
-        allow(Chef::Knife::Bootstrap).to receive(:new).and_return(knife_bootstrap)
+        allow_any_instance_of(StringIO).to receive(:string).and_return(chef_run_result)
       end
 
       it_behaves_like 'skip processing instance in not valid state'
@@ -134,21 +137,37 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
           expect { subject.handle_message message }.to raise_error(Exception)
         end
       end
+    end
+  end
 
+  context 'for windows machine' do
+    let(:knife_bootstrap_winrm) { instance_double(Chef::Knife::BootstrapWindowsWinrm, run: 0, default_config: {}, config: {}).as_null_object }
+    let(:platform) { 'windows' }
+
+    before(:each) do
+      expect(Chef::Knife::Bootstrap).to_not receive(:new)
+      allow(Chef::Knife::BootstrapWindowsWinrm).to receive(:new).and_return(knife_bootstrap_winrm)
     end
 
-    context 'for windows machine' do
+    it_behaves_like 'handler'
+
+    context '#handle_message' do
+      let(:chef_run_result) { 'Chef Run complete' }
+
       before(:each) do
-        allow(instance).to receive(:platform).and_return('windows')
-        allow(Chef::Knife::BootstrapWindowsWinrm).to receive(:new).and_return(knife_bootstrap_winrm)
+        allow_any_instance_of(StringIO).to receive(:string).and_return(chef_run_result)
       end
 
       it_behaves_like 'skip processing instance in not valid state'
 
-      it 'should use Chef version for windows' do
-        subject.handle_message message
-        expect(Chef::Knife::BootstrapWindowsWinrm).to have_received(:new) do |args|
-          expect(args).to be_include('11.6-windows')
+      context 'when version for windows is provided' do
+        let(:config) { { 'version_for_windows' => '11.6-windows', 'version_for_linux' => '11.0-linux' } }
+
+        it 'uses version for windows' do
+          subject.handle_message message
+          expect(Chef::Knife::BootstrapWindowsWinrm).to have_received(:new) do |args|
+            expect(args).to be_include('11.6-windows')
+          end
         end
       end
 
@@ -183,7 +202,8 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
   end
 
   context '#handle_message publishes message to error topic for terminated instance' do
-    let(:instance) { instance_double('AWS::EC2::Instance', status: :terminated).as_null_object }
+    let(:status_name) { 'terminated' }
+    let(:instance) { instance_double(Aws::EC2::Instance, state: state) }
 
     it 'publishes message to error topic' do
       subject.handle_message(message)
