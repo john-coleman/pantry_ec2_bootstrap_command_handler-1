@@ -74,7 +74,7 @@ module Wonga
         logger_error = IOWithLogger.new(out, @logger, Logger::ERROR)
         bootstrap.ui = Chef::Knife::UI.new(logger, logger_error, STDIN, {})
         Chef::Log.logger = logger
-        logger.level = Logger::DEBUG
+        logger.level = @logger.level
         $stdout = logger
         exit_code = yield
         return out.string, exit_code
@@ -100,12 +100,13 @@ module Wonga
                  '--identity-file',
                  '~/.ssh/aws-ssh-keypair.pem',
                  '--run-list',
-                 message['run_list'].join(','),
-                 '--verbose'
+                 message['run_list'].join(',')
                 ]
         array += ['--bootstrap-version', chef_ver] if chef_ver
         array += ['--bootstrap-proxy', message['http_proxy']] if message['http_proxy']
-        array << ['--verbose']
+        array += ['--verbose'] if @logger.info?
+        array += ['--verbose'] if @logger.debug?
+        array
       end
 
       def message_to_windows_args(message, ec2_instance, chef_ver = nil)
@@ -122,13 +123,12 @@ module Wonga
                  '--winrm-user',
                  'Administrator',
                  '--winrm-transport',
-                 'plaintext',
-                 '--verbose',
-                 '-l',
-                 'debug'
+                 'plaintext'
                 ]
         array += ['--bootstrap-version', chef_ver] if chef_ver
         array += ['--bootstrap-proxy', message['http_proxy']] if message['http_proxy']
+        array += ['--verbose'] if @logger.info?
+        array += ['--verbose'] if @logger.debug?
         array
       end
     end
