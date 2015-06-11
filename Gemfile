@@ -10,6 +10,7 @@ group :development do
 end
 
 group :test, :development do
+  gem 'pry'
   gem 'simplecov', require: false
   gem 'simplecov-rcov', require: false
   gem 'rspec', '~> 3.0'

@@ -12,6 +12,7 @@ require 'chef/application/knife'
 Chef::Knife::Bootstrap.options = Chef::Application::Knife.options.merge(Chef::Knife::Bootstrap.options)
 Chef::Knife::BootstrapWindowsWinrm.options = Chef::Application::Knife.options.merge(Chef::Knife::BootstrapWindowsWinrm.options)
 require_relative 'io_with_logger'
+require_relative 'io_with_syslog'
 
 module Wonga
   module Daemon
@@ -70,11 +71,17 @@ module Wonga
 
       def capture_bootstrap_stdout(bootstrap)
         out = StringIO.new
-        logger = IOWithLogger.new(out, @logger, Logger::INFO)
-        logger_error = IOWithLogger.new(out, @logger, Logger::ERROR)
+        case @logger.class.name
+        when 'Logger'
+          logger = IOWithLogger.new(out, @logger, Logger::INFO)
+          logger_error = IOWithLogger.new(out, @logger, Logger::ERROR)
+        when 'Syslog::Logger'
+          logger = IOWithSyslog.new(out, @logger, Syslog::LOG_INFO)
+          logger.level = @logger.level
+          logger_error = logger
+        end
         bootstrap.ui = Chef::Knife::UI.new(logger, logger_error, STDIN, {})
         Chef::Log.logger = logger
-        logger.level = @logger.level
         $stdout = logger
         exit_code = yield
         return out.string, exit_code

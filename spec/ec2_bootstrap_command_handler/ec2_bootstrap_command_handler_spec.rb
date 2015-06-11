@@ -1,6 +1,11 @@
 require_relative '../../ec2_bootstrap_command_handler/ec2_bootstrap_command_handler'
+require_relative '../../ec2_bootstrap_command_handler/io_with_logger'
+require_relative '../../ec2_bootstrap_command_handler/io_with_syslog'
 require 'wonga/daemon/aws_resource'
 require 'wonga/daemon/publisher'
+require 'syslog'
+require 'syslog/logger'
+require 'pry'
 
 RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
   shared_examples 'skip processing instance in not valid state' do
@@ -61,7 +66,8 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
   let(:config) { {} }
   let(:error_publisher) { instance_double(Wonga::Daemon::Publisher).as_null_object }
   let(:instance) { instance_double(Aws::EC2::Instance, exists?: true, state: state, private_dns_name: address, platform: platform) }
-  let(:logger) { instance_double(Logger).as_null_object }
+  let(:logger) { instance_double(Logger, class: Logger).as_null_object }
+  let(:logger) { instance_double(Syslog::Logger, class: Syslog::Logger).as_null_object }
   let(:publisher) { instance_double(Wonga::Daemon::Publisher).as_null_object }
   let(:state) { Struct.new(:name).new(status_name) }
   let(:status_name) { 'running' }
@@ -78,7 +84,7 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
 
     it_behaves_like 'handler'
 
-    context '#handle_message' do
+    describe '#handle_message' do
       let(:chef_run_result) { 'Chef Run complete' }
 
       before(:each) do
@@ -213,6 +219,24 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
     it 'does not publish message to topic' do
       subject.handle_message(message)
       expect(publisher).to_not have_received(:publish)
+    end
+  end
+
+  describe '#capture_bootstrap_stdout' do
+    let(:chef_run_result) { 'Chef Run complete' }
+    let(:knife_bootstrap) { instance_double(Chef::Knife::Bootstrap, run: 0, default_config: {}, config: {}).as_null_object }
+    let(:platform) { '' }
+
+    before(:each) do
+      allow_any_instance_of(StringIO).to receive(:string).and_return(chef_run_result)
+    end
+
+    it 'yields to block' do
+      expect { |b| subject.capture_bootstrap_stdout(knife_bootstrap).yield_once_with(1, &b).to yield_control }
+    end
+
+    it 'returns output string and exit code' do
+      expect(subject.capture_bootstrap_stdout(knife_bootstrap) { 1 }).to eq([chef_run_result, 1])
     end
   end
 end
