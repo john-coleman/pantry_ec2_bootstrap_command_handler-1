@@ -13,7 +13,7 @@ RSpec.describe Wonga::Daemon::EC2BootstrapCommandHandler do
       let(:status_name) { 'stopped' }
 
       it 'raises exception without initializing' do
-        expect { subject.handle_message message }.to raise_exception
+        expect { subject.handle_message message }.to raise_error RuntimeError
       end
     end
 
