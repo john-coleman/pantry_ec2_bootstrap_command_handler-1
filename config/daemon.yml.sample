@@ -25,6 +25,7 @@ development:
   chef:
     version_for_windows: '11.6'
     version_for_linux: '11.6'
+  ssh_key_file: ~/.ssh/development.pem
 test:
   aws:
     access_key_id: some_aws_iam_access_key_id
@@ -48,6 +49,7 @@ test:
   chef:
     version_for_windows: '11.6'
     version_for_linux: '11.6'
+  ssh_key_file: ~/.ssh/test.pem
 production:
   aws:
     access_key_id: some_aws_iam_access_key_id
@@ -71,3 +73,4 @@ production:
   chef:
     version_for_windows: '11.6'
     version_for_linux: '11.6'
+  ssh_key_file: ~/.ssh/production.pem

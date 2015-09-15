@@ -105,7 +105,7 @@ module Wonga
                  message['bootstrap_username'] || 'ubuntu',
                  '--sudo',
                  '--identity-file',
-                 '~/.ssh/aws-ssh-keypair.pem',
+                 @config['ssh_key_file'],
                  '--run-list',
                  message['run_list'].join(',')
                 ]
