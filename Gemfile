@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gem 'chef', '~> 12.3'
 gem 'knife-windows'
-gem 'pantry_daemon_common', git: 'git@github.com:wongatech/pantry_daemon_common.git' # migrate to gems soon
+gem 'pantry_daemon_common', github: 'wongatech/pantry_daemon_common' # migrate to gems soon
 
 group :development do
   gem 'guard-rspec'
