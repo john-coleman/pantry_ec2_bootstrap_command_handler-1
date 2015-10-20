@@ -84,7 +84,7 @@ module Wonga
         Chef::Log.logger = logger
         $stdout = logger
         exit_code = yield
-        return out.string, exit_code
+        return out.string.toutf8, exit_code
       rescue SystemExit => se
         @logger.error "Chef bootstrap failure caused system error: #{se}"
         @logger.error se.backtrace

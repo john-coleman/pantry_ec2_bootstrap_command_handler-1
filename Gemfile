@@ -16,4 +16,5 @@ group :test, :development do
   gem 'rspec', '~> 3.0'
   gem 'rake'
   gem 'rubocop'
+  gem 'memory_profiler'
 end
